@@ -10,11 +10,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
@@ -61,6 +66,7 @@ public class MainActivity extends Activity {
             // закрываем поток
             bw.close();
             Log.d(LOG_TAG, "Файл записан");
+            Toast.makeText(getApplicationContext(), "Файл записан", Toast.LENGTH_SHORT).show();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -77,6 +83,8 @@ public class MainActivity extends Activity {
             // читаем содержимое
             while ((str = br.readLine()) != null) {
                 Log.d(LOG_TAG, str);
+                Toast.makeText(getApplicationContext(), str, Toast.LENGTH_SHORT).show();
+
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -90,8 +98,12 @@ public class MainActivity extends Activity {
         if (!Environment.getExternalStorageState().equals(
                 Environment.MEDIA_MOUNTED)) {
             Log.d(LOG_TAG, "SD-карта не доступна: " + Environment.getExternalStorageState());
+            Toast.makeText(getApplicationContext(), "SD-карта не доступна: " + Environment.getExternalStorageState(), Toast.LENGTH_SHORT).show();
             return;
         }
+
+        isStoragePermissionGranted();
+
         // получаем путь к SD
         File sdPath = Environment.getExternalStorageDirectory();
         // добавляем свой каталог к пути
@@ -107,17 +119,41 @@ public class MainActivity extends Activity {
             bw.write("Содержимое файла на SD");
             // закрываем поток
             bw.close();
+
             Log.d(LOG_TAG, "Файл записан на SD: " + sdFile.getAbsolutePath());
+            Toast.makeText(getApplicationContext(),"Файл записан на SD: " + sdFile.getAbsolutePath(), Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+    public  boolean isStoragePermissionGranted() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+            if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                Log.v(LOG_TAG,"Permission is granted");
+                return true;
+            } else {
+                Log.v(LOG_TAG,"Permission is revoked");
+                Toast.makeText(getApplicationContext(),"Файл НЕ записан на SD!!!", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        }
+        else { //permission is automatically granted on sdk<23 upon installation
+            Log.v(LOG_TAG,"Permission is granted");
+            return true;
+        }
+
+    }
+
 
     void readFileSD() {
         // проверяем доступность SD
         if (!Environment.getExternalStorageState().equals(
                 Environment.MEDIA_MOUNTED)) {
             Log.d(LOG_TAG, "SD-карта не доступна: " + Environment.getExternalStorageState());
+            Toast.makeText(getApplicationContext(), "SD-карта не доступна: " + Environment.getExternalStorageState(), Toast.LENGTH_SHORT).show();
             return;
         }
         // получаем путь к SD
@@ -133,6 +169,7 @@ public class MainActivity extends Activity {
             // читаем содержимое
             while ((str = br.readLine()) != null) {
                 Log.d(LOG_TAG, str);
+                Toast.makeText(getApplicationContext(), str, Toast.LENGTH_SHORT).show();
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
